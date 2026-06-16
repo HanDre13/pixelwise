@@ -1,4 +1,15 @@
+# Python
 .venv/
-.env
 __pycache__/
 *.pyc
+
+# Secrets
+.env
+
+# Data and models (too large, reproducible)
+data/
+models/*.pkl
+
+# Editor files
+.vscode/
+*.swp
