@@ -30,5 +30,15 @@ jobs:
       - name: Run flake8
         run: flake8 app/ tests/ predict.py --count --exit-zero
 
+      - name: Download model artefact
+        run: |
+          git clone --depth 1 --branch v1.0 \
+            https://github.com/schutera/pixelwise-model.git /tmp/pixelwise-model
+          mkdir -p models
+          cp /tmp/pixelwise-model/*.pkl models/
+          cp /tmp/pixelwise-model/MODELCARD.md models/
+
       - name: Run tests
+        env:
+          MODEL_PATH: models/digit_classifier_v1.pkl
         run: pytest tests/ -v
