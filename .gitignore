@@ -13,3 +13,4 @@ models/*.pkl
 # Editor files
 .vscode/
 *.swp
+.coverage
