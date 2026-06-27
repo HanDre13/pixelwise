@@ -1,35 +1,28 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest-cov ruff flake8
-
       - name: Run ruff
         run: ruff check .
-
       - name: Run flake8
         run: flake8 app/ tests/ predict.py --count --exit-zero
-
       - name: Download model artefact
         run: |
           git clone --depth 1 --branch v1.0 \
@@ -37,8 +30,23 @@ jobs:
           mkdir -p models
           cp /tmp/pixelwise-model/*.pkl models/
           cp /tmp/pixelwise-model/MODELCARD.md models/
-
       - name: Run tests
         env:
           MODEL_PATH: models/digit_classifier_v1.pkl
         run: pytest tests/ -v --cov=app --cov-report=term-missing
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, pixelwise-prod]
+    steps:
+      - name: Pull latest code on prod
+        run: |
+          cd /opt/pixelwise
+          git pull origin main
+      - name: Run smoke test on prod
+        env:
+          MODEL_PATH: models/digit_classifier_v1.pkl
+        run: |
+          cd /opt/pixelwise
+          .venv/bin/python predict.py
